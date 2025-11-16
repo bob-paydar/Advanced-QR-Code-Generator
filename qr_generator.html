@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Advanced QR Code Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- QRCode.js library -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #111827;
+      color: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      padding: 12px 20px;
+      background: #0f172a;
+      border-bottom: 1px solid #1f2937;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      font-size: 1.1rem;
+      margin: 0;
+    }
+    header small {
+      color: #9ca3af;
+      font-size: 0.8rem;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      padding: 16px;
+      gap: 16px;
+    }
+    .panel {
+      background: #020617;
+      border-radius: 10px;
+      padding: 16px;
+      border: 1px solid #1f2937;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    #leftPanel {
+      flex: 1 1 360px;
+      max-width: 540px;
+      min-width: 320px;
+    }
+    #rightPanel {
+      flex: 1 1 320px;
+      min-width: 280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="url"],
+    input[type="datetime-local"],
+    input[type="date"],
+    input[type="time"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+      outline: none;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px #3b82f6;
+    }
+    select {
+      cursor: pointer;
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+    .row > div {
+      flex: 1;
+    }
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      background: #2563eb;
+      color: #f9fafb;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: 6px;
+      margin-top: 4px;
+    }
+    button.secondary {
+      background: #111827;
+      border: 1px solid #374151;
+      color: #e5e7eb;
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      filter: brightness(1.1);
+    }
+    .section-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin: 10px 0 6px;
+      color: #e5e7eb;
+    }
+    .type-fields {
+      display: none;
+      margin-bottom: 4px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #020617;
+      border: 1px dashed #1f2937;
+    }
+    .type-fields.active {
+      display: block;
+    }
+    #qrcodeContainer {
+      padding: 12px;
+      border-radius: 12px;
+      background: #020617;
+      border: 1px solid #374151;
+      min-height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+    #qrcode {
+      display: inline-block;
+    }
+    #contentPreview {
+      width: 100%;
+      margin-top: 8px;
+      font-size: 0.75rem;
+      background: #020617;
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+      padding: 8px;
+      color: #9ca3af;
+      max-height: 120px;
+      overflow: auto;
+      white-space: pre-wrap;
+      text-align: left;
+    }
+    #message {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: #fbbf24;
+    }
+    footer {
+      padding: 6px 16px 10px;
+      font-size: 0.75rem;
+      text-align: center;
+      color: #6b7280;
+      border-top: 1px solid #1f2937;
+      background: #020617;
+    }
+    @media (max-width: 800px) {
+      main {
+        flex-direction: column;
+      }
+      #rightPanel {
+        order: -1;
+      }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Advanced QR Code Generator</h1>
+    <small>Multi-type | High-resolution | PNG &amp; JPG export</small>
+  </div>
+</header>
+
+<main>
+  <section id="leftPanel" class="panel">
+    <div class="row">
+      <div>
+        <label for="typeSelect">Content type</label>
+        <select id="typeSelect">
+          <option value="link">Link (URL)</option>
+          <option value="text">Text</option>
+          <option value="email">E-mail</option>
+          <option value="call">Call</option>
+          <option value="sms">SMS</option>
+          <option value="vcard">V-card</option>
+          <option value="whatsapp">WhatsApp</option>
+          <option value="wifi">WI-FI</option>
+          <option value="pdf">PDF</option>
+          <option value="app">App</option>
+          <option value="image">Images</option>
+          <option value="video">Video</option>
+          <option value="social">Social Media</option>
+          <option value="event">Event</option>
+          <option value="barcode2d">2D Barcode (raw data)</option>
+        </select>
+      </div>
+      <div>
+        <label for="sizeInput">Size (px, for print)</label>
+        <input id="sizeInput" type="number" min="256" max="2000" value="800">
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label for="eccSelect">Error correction</label>
+        <select id="eccSelect">
+          <option value="L">L (7%)</option>
+          <option value="M" selected>M (15%)</option>
+          <option value="Q">Q (25%)</option>
+          <option value="H">H (30%)</option>
+        </select>
+      </div>
+      <div>
+        <label>Actions</label>
+        <div>
+          <button id="generateBtn">Generate QR</button>
+          <button id="clearBtn" class="secondary">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="fieldsContainer">
+
+      <!-- LINK -->
+      <div class="type-fields" id="fields-link">
+        <div class="section-title">Link</div>
+        <label for="linkUrl">URL</label>
+        <input id="linkUrl" type="url" placeholder="https://example.com">
+      </div>
+
+      <!-- TEXT -->
+      <div class="type-fields" id="fields-text">
+        <div class="section-title">Text</div>
+        <label for="textContent">Text</label>
+        <textarea id="textContent" placeholder="Enter any text"></textarea>
+      </div>
+
+      <!-- EMAIL -->
+      <div class="type-fields" id="fields-email">
+        <div class="section-title">E-mail</div>
+        <label for="emailAddress">E-mail address</label>
+        <input id="emailAddress" type="email" placeholder="user@example.com">
+        <label for="emailSubject">Subject</label>
+        <input id="emailSubject" type="text" placeholder="Subject">
+        <label for="emailBody">Body</label>
+        <textarea id="emailBody" placeholder="Message body"></textarea>
+      </div>
+
+      <!-- CALL -->
+      <div class="type-fields" id="fields-call">
+        <div class="section-title">Call</div>
+        <label for="callNumber">Phone number</label>
+        <input id="callNumber" type="tel" placeholder="+1 555 123 4567">
+      </div>
+
+      <!-- SMS -->
+      <div class="type-fields" id="fields-sms">
+        <div class="section-title">SMS</div>
+        <label for="smsNumber">Phone number</label>
+        <input id="smsNumber" type="tel" placeholder="+1 555 123 4567">
+        <label for="smsMessage">Message</label>
+        <textarea id="smsMessage" placeholder="SMS message"></textarea>
+      </div>
+
+      <!-- V-CARD -->
+      <div class="type-fields" id="fields-vcard">
+        <div class="section-title">V-card</div>
+        <div class="row">
+          <div>
+            <label for="vFirst">First name</label>
+            <input id="vFirst" type="text">
+          </div>
+          <div>
+            <label for="vLast">Last name</label>
+            <input id="vLast" type="text">
+          </div>
+        </div>
+        <label for="vOrg">Organization</label>
+        <input id="vOrg" type="text">
+        <label for="vTitle">Title</label>
+        <input id="vTitle" type="text">
+        <div class="row">
+          <div>
+            <label for="vPhone">Phone</label>
+            <input id="vPhone" type="tel">
+          </div>
+          <div>
+            <label for="vEmail">E-mail</label>
+            <input id="vEmail" type="email">
+          </div>
+        </div>
+        <label for="vUrl">Website</label>
+        <input id="vUrl" type="url">
+
+        <div class="row">
+          <div>
+            <label for="vHomeAddress">Home address</label>
+            <input id="vHomeAddress" type="text" placeholder="Street, City, State, ZIP, Country">
+          </div>
+          <div>
+            <label for="vWorkAddress">Work address</label>
+            <input id="vWorkAddress" type="text" placeholder="Street, City, State, ZIP, Country">
+          </div>
+        </div>
+      </div>
+
+      <!-- WHATSAPP -->
+      <div class="type-fields" id="fields-whatsapp">
+        <div class="section-title">WhatsApp</div>
+        <label for="waPhone">Phone number (international format, digits only)</label>
+        <input id="waPhone" type="tel" placeholder="15551234567">
+        <label for="waMessage">Message</label>
+        <textarea id="waMessage" placeholder="Hello from QR!"></textarea>
+      </div>
+
+      <!-- WIFI -->
+      <div class="type-fields" id="fields-wifi">
+        <div class="section-title">WI-FI</div>
+        <label for="wifiSsid">SSID (Network name)</label>
+        <input id="wifiSsid" type="text">
+        <label for="wifiPassword">Password</label>
+        <input id="wifiPassword" type="text">
+        <div class="row">
+          <div>
+            <label for="wifiEncryption">Encryption</label>
+            <select id="wifiEncryption">
+              <option value="WPA">WPA/WPA2/WPA3</option>
+              <option value="WEP">WEP</option>
+              <option value="nopass">No password</option>
+            </select>
+          </div>
+          <div>
+            <label for="wifiHidden">Hidden network?</label>
+            <select id="wifiHidden">
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- PDF -->
+      <div class="type-fields" id="fields-pdf">
+        <div class="section-title">PDF</div>
+        <label for="pdfUrl">PDF URL</label>
+        <input id="pdfUrl" type="url" placeholder="https://example.com/file.pdf">
+      </div>
+
+      <!-- APP -->
+      <div class="type-fields" id="fields-app">
+        <div class="section-title">App</div>
+        <label for="appUrl">App URL (Store / Deep link)</label>
+        <input id="appUrl" type="url" placeholder="https://apps.apple.com/... or app://deep-link">
+      </div>
+
+      <!-- IMAGE -->
+      <div class="type-fields" id="fields-image">
+        <div class="section-title">Images</div>
+        <label for="imageUrl">Image URL</label>
+        <input id="imageUrl" type="url" placeholder="https://example.com/image.jpg">
+      </div>
+
+      <!-- VIDEO -->
+      <div class="type-fields" id="fields-video">
+        <div class="section-title">Video</div>
+        <label for="videoUrl">Video URL</label>
+        <input id="videoUrl" type="url" placeholder="https://youtube.com/...">
+      </div>
+
+      <!-- SOCIAL -->
+      <div class="type-fields" id="fields-social">
+        <div class="section-title">Social Media</div>
+        <label for="socialUrl">Profile / Post URL</label>
+        <input id="socialUrl" type="url" placeholder="https://instagram.com/yourprofile">
+      </div>
+
+      <!-- EVENT -->
+      <div class="type-fields" id="fields-event">
+        <div class="section-title">Event (iCalendar)</div>
+        <label for="eventTitle">Title</label>
+        <input id="eventTitle" type="text" placeholder="Meeting with ...">
+        <label for="eventLocation">Location</label>
+        <input id="eventLocation" type="text" placeholder="Office / Online link">
+        <label for="eventDescription">Description</label>
+        <textarea id="eventDescription" placeholder="Event details"></textarea>
+        <div class="row">
+          <div>
+            <label for="eventStartDate">Start date</label>
+            <input id="eventStartDate" type="date">
+          </div>
+          <div>
+            <label for="eventStartTime">Start time</label>
+            <input id="eventStartTime" type="time">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="eventEndDate">End date</label>
+            <input id="eventEndDate" type="date">
+          </div>
+          <div>
+            <label for="eventEndTime">End time</label>
+            <input id="eventEndTime" type="time">
+          </div>
+        </div>
+      </div>
+
+      <!-- 2D BARCODE -->
+      <div class="type-fields" id="fields-barcode2d">
+        <div class="section-title">2D Barcode (generic)</div>
+        <label for="barcodeData">Raw data</label>
+        <textarea id="barcodeData" placeholder="Any raw string / payload"></textarea>
+      </div>
+    </div>
+
+    <div class="section-title">Generated content (for debugging / verification)</div>
+    <pre id="contentPreview"></pre>
+    <div id="message"></div>
+  </section>
+
+  <section id="rightPanel" class="panel">
+    <div style="width:100%;">
+      <div class="section-title">QR Preview</div>
+      <div id="qrcodeContainer">
+        <div id="qrcode"></div>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <button id="downloadPngBtn" disabled>Download PNG</button>
+      <button id="downloadJpgBtn" class="secondary" disabled>Download JPG</button>
+      <div style="margin-top:6px; font-size:0.75rem; color:#9ca3af;">
+        For high-quality print, use a larger size (e.g. 800–1500px) and keep ECC at M or H.
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Standalone HTML5 QR generator – works fully in-browser, no data is uploaded.
+</footer>
+
+<script>
+(function() {
+  const typeSelect = document.getElementById('typeSelect');
+  const sizeInput = document.getElementById('sizeInput');
+  const eccSelect  = document.getElementById('eccSelect');
+  const generateBtn = document.getElementById('generateBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const contentPreview = document.getElementById('contentPreview');
+  const messageEl = document.getElementById('message');
+  const qrContainer = document.getElementById('qrcode');
+  const downloadPngBtn = document.getElementById('downloadPngBtn');
+  const downloadJpgBtn = document.getElementById('downloadJpgBtn');
+
+  let qrInstance = null;
+
+  function showTypeFields(type) {
+    const fields = document.querySelectorAll('.type-fields');
+    fields.forEach(f => f.classList.remove('active'));
+    const active = document.getElementById('fields-' + type);
+    if (active) active.classList.add('active');
+  }
+
+  function encodeURIComponentSafe(str) {
+    return encodeURIComponent(str || '').replace(/'/g, '%27');
+  }
+
+  function dtToICS(dateStr, timeStr) {
+    if (!dateStr) return '';
+    const d = dateStr.replace(/-/g, '');
+    let t = '000000';
+    if (timeStr) {
+      const parts = timeStr.split(':');
+      const hh = parts[0] || '00';
+      const mm = parts[1] || '00';
+      t = hh.padStart(2,'0') + mm.padStart(2,'0') + '00';
+    }
+    return d + 'T' + t;
+  }
+
+  function buildContent() {
+    const type = typeSelect.value;
+    messageEl.textContent = '';
+    let content = '';
+
+    switch (type) {
+      case 'link': {
+        const url = document.getElementById('linkUrl').value.trim();
+        if (!url) throw new Error('Please enter a URL.');
+        content = url;
+        break;
+      }
+      case 'text': {
+        const txt = document.getElementById('textContent').value;
+        if (!txt) throw new Error('Please enter some text.');
+        content = txt;
+        break;
+      }
+      case 'email': {
+        const addr = document.getElementById('emailAddress').value.trim();
+        const subj = document.getElementById('emailSubject').value.trim();
+        const body = document.getElementById('emailBody').value.trim();
+        if (!addr) throw new Error('Please enter an e-mail address.');
+        let mailto = 'mailto:' + addr;
+        const params = [];
+        if (subj) params.push('subject=' + encodeURIComponentSafe(subj));
+        if (body) params.push('body=' + encodeURIComponentSafe(body));
+        if (params.length > 0) mailto += '?' + params.join('&');
+        content = mailto;
+        break;
+      }
+      case 'call': {
+        const num = document.getElementById('callNumber').value.trim();
+        if (!num) throw new Error('Please enter a phone number.');
+        content = 'tel:' + num;
+        break;
+      }
+      case 'sms': {
+        const num = document.getElementById('smsNumber').value.trim();
+        const msg = document.getElementById('smsMessage').value.trim();
+        if (!num) throw new Error('Please enter a phone number.');
+        let sms = 'sms:' + num;
+        if (msg) sms += '?body=' + encodeURIComponentSafe(msg);
+        content = sms;
+        break;
+      }
+      case 'vcard': {
+        const first = document.getElementById('vFirst').value.trim();
+        const last = document.getElementById('vLast').value.trim();
+        const org = document.getElementById('vOrg').value.trim();
+        const title = document.getElementById('vTitle').value.trim();
+        const phone = document.getElementById('vPhone').value.trim();
+        const email = document.getElementById('vEmail').value.trim();
+        const url = document.getElementById('vUrl').value.trim();
+        const homeAddr = document.getElementById('vHomeAddress').value.trim();
+        const workAddr = document.getElementById('vWorkAddress').value.trim();
+
+        if (!first && !last) throw new Error('Please enter at least a first or last name for V-card.');
+
+        const fn = (first + ' ' + last).trim();
+        const lines = [
+          'BEGIN:VCARD',
+          'VERSION:3.0',
+          `N:${last};${first};;;`,
+          `FN:${fn}`
+        ];
+        if (org)   lines.push('ORG:' + org);
+        if (title) lines.push('TITLE:' + title);
+        if (phone) lines.push('TEL;TYPE=CELL:' + phone);
+        if (email) lines.push('EMAIL;TYPE=INTERNET:' + email);
+        if (homeAddr) {
+          lines.push('ADR;TYPE=HOME:;;' + homeAddr.replace(/,/g,';'));
+        }
+        if (workAddr) {
+          lines.push('ADR;TYPE=WORK:;;' + workAddr.replace(/,/g,';'));
+        }
+        if (url)   lines.push('URL:' + url);
+        lines.push('END:VCARD');
+        content = lines.join('\n');
+        break;
+      }
+      case 'whatsapp': {
+        const phone = document.getElementById('waPhone').value.trim();
+        const msg = document.getElementById('waMessage').value.trim();
+        if (!phone) throw new Error('Please enter a WhatsApp phone number (digits).');
+        let url = 'https://wa.me/' + phone;
+        if (msg) url += '?text=' + encodeURIComponentSafe(msg);
+        content = url;
+        break;
+      }
+      case 'wifi': {
+        const ssid = document.getElementById('wifiSsid').value.trim();
+        const pwd  = document.getElementById('wifiPassword').value;
+        const enc  = document.getElementById('wifiEncryption').value;
+        const hid  = document.getElementById('wifiHidden').value === 'true';
+        if (!ssid) throw new Error('Please enter SSID.');
+        let s = 'WIFI:';
+        s += 'T:' + (enc || 'nopass') + ';';
+        s += 'S:' + ssid + ';';
+        if (enc !== 'nopass') s += 'P:' + pwd + ';';
+        if (hid) s += 'H:true;';
+        s += ';';
+        content = s;
+        break;
+      }
+      case 'pdf': {
+        const pdf = document.getElementById('pdfUrl').value.trim();
+        if (!pdf) throw new Error('Please enter PDF URL.');
+        content = pdf;
+        break;
+      }
+      case 'app': {
+        const appUrl = document.getElementById('appUrl').value.trim();
+        if (!appUrl) throw new Error('Please enter App URL / deep link.');
+        content = appUrl;
+        break;
+      }
+      case 'image': {
+        const imageUrl = document.getElementById('imageUrl').value.trim();
+        if (!imageUrl) throw new Error('Please enter Image URL.');
+        content = imageUrl;
+        break;
+      }
+      case 'video': {
+        const videoUrl = document.getElementById('videoUrl').value.trim();
+        if (!videoUrl) throw new Error('Please enter Video URL.');
+        content = videoUrl;
+        break;
+      }
+      case 'social': {
+        const socialUrl = document.getElementById('socialUrl').value.trim();
+        if (!socialUrl) throw new Error('Please enter Social profile/post URL.');
+        content = socialUrl;
+        break;
+      }
+      case 'event': {
+        const title = document.getElementById('eventTitle').value.trim();
+        const loc = document.getElementById('eventLocation').value.trim();
+        const desc = document.getElementById('eventDescription').value.trim();
+        const sd = document.getElementById('eventStartDate').value;
+        const st = document.getElementById('eventStartTime').value;
+        const ed = document.getElementById('eventEndDate').value;
+        const et = document.getElementById('eventEndTime').value;
+
+        if (!title) throw new Error('Please enter Event title.');
+        if (!sd) throw new Error('Please choose Event start date.');
+
+        const dtstart = dtToICS(sd, st);
+        const dtend   = dtToICS(ed || sd, et);
+
+        const lines = [
+          'BEGIN:VCALENDAR',
+          'VERSION:2.0',
+          'BEGIN:VEVENT',
+          'SUMMARY:' + title,
+          dtstart ? 'DTSTART:' + dtstart : '',
+          dtend   ? 'DTEND:'   + dtend   : '',
+          loc ? 'LOCATION:' + loc : '',
+          desc ? 'DESCRIPTION:' + desc.replace(/\r?\n/g, '\\n') : '',
+          'END:VEVENT',
+          'END:VCALENDAR'
+        ].filter(Boolean);
+
+        content = lines.join('\n');
+        break;
+      }
+      case 'barcode2d': {
+        const data = document.getElementById('barcodeData').value;
+        if (!data) throw new Error('Please enter raw data for the 2D barcode.');
+        content = data;
+        break;
+      }
+      default:
+        throw new Error('Unsupported type.');
+    }
+
+    return content;
+  }
+
+  function getCorrectLevel(value) {
+    switch (value) {
+      case 'L': return QRCode.CorrectLevel.L;
+      case 'Q': return QRCode.CorrectLevel.Q;
+      case 'H': return QRCode.CorrectLevel.H;
+      default:  return QRCode.CorrectLevel.M;
+    }
+  }
+
+  function clearQr() {
+    qrContainer.innerHTML = '';
+    qrInstance = null;
+    contentPreview.textContent = '';
+    messageEl.textContent = '';
+    downloadPngBtn.disabled = true;
+    downloadJpgBtn.disabled = true;
+  }
+
+  function generateQr() {
+    try {
+      const size = parseInt(sizeInput.value, 10);
+      if (isNaN(size) || size < 256 || size > 2000) {
+        throw new Error('Size must be between 256 and 2000 pixels.');
+      }
+      const ecc = eccSelect.value;
+      const content = buildContent();
+
+      clearQr();
+
+      qrInstance = new QRCode(qrContainer, {
+        text: content,
+        width: size,
+        height: size,
+        correctLevel: getCorrectLevel(ecc)
+      });
+
+      contentPreview.textContent = content;
+      messageEl.style.color = '#6ee7b7';
+      messageEl.textContent = 'QR generated. Size: ' + size + ' × ' + size + ' px, ECC: ' + ecc + '.';
+      downloadPngBtn.disabled = false;
+      downloadJpgBtn.disabled = false;
+    } catch (err) {
+      messageEl.style.color = '#f97373';
+      messageEl.textContent = err.message || String(err);
+    }
+  }
+
+  function downloadImage(type) {
+    const canvas = qrContainer.querySelector('canvas');
+    if (!canvas) {
+      alert('No QR code available. Generate one first.');
+      return;
+    }
+    const mime = type === 'png' ? 'image/png' : 'image/jpeg';
+    const ext  = type === 'png' ? '.png' : '.jpg';
+    const dataUrl = canvas.toDataURL(mime);
+
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = 'qr_' + Date.now() + ext;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // Events
+  typeSelect.addEventListener('change', () => {
+    showTypeFields(typeSelect.value);
+    messageEl.textContent = '';
+  });
+
+  generateBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    generateQr();
+  });
+
+  clearBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    clearQr();
+  });
+
+  downloadPngBtn.addEventListener('click', () => downloadImage('png'));
+  downloadJpgBtn.addEventListener('click', () => downloadImage('jpg'));
+
+  // Initialize
+  showTypeFields(typeSelect.value);
+})();
+</script>
+</body>
+</html>
