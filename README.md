@@ -1,5 +1,5 @@
 # Advanced HTML5 QR Code Generator
-
+![Screenshot](https://github.com/bob-paydar/Advanced-QR-Code-Generator/blob/main/screenshot.png)
 This project is a **single-page HTML5 QR code generator** that runs entirely in the browser. It supports multiple content types, high‑resolution output suitable for printing, and download in **PNG** and **JPG** formats.
 
 ## Features
